@@ -14,7 +14,7 @@ Diesser_plusAudioProcessorEditor::Diesser_plusAudioProcessorEditor (Diesser_plus
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // Запускаємо таймер на 30 кадрів на секунду (приблизно кожні 33 мілісекунди)
-    startTimerHz(30);
+    startTimerHz(45);
     
     //gain
     gainSlider.setSliderStyle(juce::Slider::LinearVertical);
