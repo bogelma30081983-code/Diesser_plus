@@ -332,7 +332,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     float makeupGaindB = gainParam->load();
     float makeupGainLinear = juce::Decibels::decibelsToGain(makeupGaindB);
 
-    float maxAttenuationDb = -15.0f;
+    //float maxAttenuationDb = -15.0f;
     float targetBassGainDb = (bassKnob / 100.0f) * maxAttenuationDb;
     float targetMidHighGainDb = (midHighKnob / 100.0f) * maxAttenuationDb;
 
@@ -406,6 +406,10 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     }
 
     // === 2. Обробка Середини ===
+    // 
+    
+
+     // === 2. Обробка Середини ===
     for (int i = 0; i < maxPeaksPerZone; ++i)
     {
         float targetMidGain = 1.0f;
@@ -418,7 +422,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             targetMidFreq = currentMidPeaks[i].frequency;
         }
 
-        smoothedMidGains[i] += (targetMidGain - smoothedMidGains[i]) * 0.15f;
+        smoothedMidGains[i] += (targetMidGain - smoothedMidGains[i]) * 0.005f;
         smoothedMidFreqs[i] += (targetMidFreq - smoothedMidFreqs[i]) * 0.05f;
 
         auto midCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, smoothedMidFreqs[i], 5.0f, smoothedMidGains[i]);
@@ -436,8 +440,76 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             }
         }
     }
+    //for (int i = 0; i < maxPeaksPerZone; ++i)
+    //{
+    //    // 1. Якщо пік реально існує в цьому кадрі — рахуємо його параметри
+    //    if (midHighKnob > 0.1f && i < currentMidPeaks.size())
+    //    {
+    //        float targetMidGain = juce::Decibels::decibelsToGain(targetMidHighGainDb * juce::jlimit(0.0f, 1.0f, currentMidPeaks[i].magnitude * 30.0f));
+
+    //        // Плавно йдемо до цілі (ультра-м'які коефіцієнти, щоб прибрати тріск!)
+    //        smoothedMidGains[i] += (targetMidGain - smoothedMidGains[i]) * 0.05f;
+    //        smoothedMidFreqs[i] += (currentMidPeaks[i].frequency - smoothedMidFreqs[i]) * 0.01f;
+    //    }
+    //    else // 2. Якщо піку немає — плавно повертаємо фільтр в "нуль" (1.0f), щоб не було клацання
+    //    {
+    //        smoothedMidGains[i] += (1.0f - smoothedMidGains[i]) * 0.05f;
+    //        // Частоту не смикаємо, нехай залишається де була, поки фільтр закривається
+    //    }
+
+    //    // 3. Оновлюємо сам фільтр (спільний крок для обох випадків)
+    //    auto midCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, smoothedMidFreqs[i], 1.0f, smoothedMidGains[i]);
+    //    *midFiltersL[i]->coefficients = *midCoefficients;
+    //    *midFiltersR[i]->coefficients = *midCoefficients;
+
+    //    // 4. ТВОЙ БЛОК ДЛЯ ГРАФІКА (ТЕПЕР ВІН ПРАЦЮЄ НА ЗГЛАДЖЕНИХ ДАНИХ!)
+    //    if (smoothedMidGains[i] < 0.99f)
+    //    {
+    //        float currentSuppression = 1.0f - smoothedMidGains[i];
+    //        if (currentSuppression > midMaxSuppression)
+    //        {
+    //            midMaxSuppression = currentSuppression;
+    //            midSuppressionFreq = smoothedMidFreqs[i];
+    //        }
+    //    }
+    //}
 
     // === 3. Обробка Високих ===
+    //for (int i = 0; i < maxPeaksPerZone; ++i)
+    //{
+    //    // 1. Якщо пік реально існує в цьому кадрі — рахуємо його параметри
+    //    if (midHighKnob > 0.1f && i < currentHighPeaks.size())
+    //    {
+    //        float targetHighGain = juce::Decibels::decibelsToGain(targetMidHighGainDb * juce::jlimit(0.0f, 1.0f, currentHighPeaks[i].magnitude * 30.0f));
+
+    //        // Плавно йдемо до цілі (ультра-м'які коефіцієнти, щоб прибрати тріск!)
+    //        smoothedHighGains[i] += (targetHighGain - smoothedHighGains[i]) * 0.15f;
+    //        smoothedHighFreqs[i] += (currentHighPeaks[i].frequency - smoothedHighFreqs[i]) * 0.05f;
+    //    }
+    //    else // 2. Якщо піку немає — плавно повертаємо фільтр в "нуль" (1.0f), щоб не було клацання
+    //    {
+    //        smoothedHighGains[i] += (1.0f - smoothedHighGains[i]) * 0.05f;
+    //        // Частоту не смикаємо, нехай залишається де була, поки фільтр закривається
+    //    }
+
+    //    // 3. Оновлюємо сам фільтр (спільний крок для обох випадків)
+    //    auto highCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, smoothedHighFreqs[i], 1.0f, smoothedHighGains[i]);
+    //    *highFiltersL[i]->coefficients = *highCoefficients;
+    //    *highFiltersR[i]->coefficients = *highCoefficients;
+
+    //    // 4. ТВОЙ БЛОК ДЛЯ ГРАФІКА (ТЕПЕР ВІН ПРАЦЮЄ НА ЗГЛАДЖЕНИХ ДАНИХ!)
+    //    if (smoothedHighGains[i] < 0.99f)
+    //    {
+    //        float currentSuppression = 1.0f - smoothedHighGains[i];
+    //        if (currentSuppression > midMaxSuppression)
+    //        {
+    //            midMaxSuppression = currentSuppression;
+    //            midSuppressionFreq = smoothedHighFreqs[i];
+    //        }
+    //    }
+    //}
+    
+    //==============================
     for (int i = 0; i < maxPeaksPerZone; ++i)
     {
         float targetHighGain = 1.0f;
@@ -450,8 +522,8 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             targetHighFreq = currentHighPeaks[i].frequency;
         }
 
-        smoothedHighGains[i] += (targetHighGain - smoothedHighGains[i]) * 0.11f;
-        smoothedHighFreqs[i] += (targetHighFreq - smoothedHighFreqs[i]) * 0.05f;
+        smoothedHighGains[i] += (targetHighGain - smoothedHighGains[i]) * 0.05f;
+        smoothedHighFreqs[i] += (targetHighFreq - smoothedHighFreqs[i]) * 0.1f;
 
         auto highCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, smoothedHighFreqs[i], 5.0f, smoothedHighGains[i]);
         *highFiltersL[i]->coefficients = *highCoefficients;

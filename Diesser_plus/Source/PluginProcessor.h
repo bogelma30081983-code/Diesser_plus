@@ -93,6 +93,7 @@ public:
 
 private:
 
+    const float maxAttenuationDb = -15.0f;
     const float drive = 1.12f;
     juce::Random random;
     //int bufferCounter = 0;
