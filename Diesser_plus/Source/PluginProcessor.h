@@ -144,6 +144,10 @@ private:
 
     // Кількість фільтрів на зону
     static constexpr int maxPeaksPerZone = 5;
+    // Наші опорні робочі частоти для кожної зони
+    const float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
+    const float midFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
+    const float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
 
     // Специфікація процесора для ініціалізації DSP
     juce::dsp::ProcessSpec dspSpec;

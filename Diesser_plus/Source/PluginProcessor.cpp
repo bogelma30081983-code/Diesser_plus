@@ -138,11 +138,11 @@ void Diesser_plusAudioProcessor::prepareToPlay(double sampleRate, int samplesPer
     dspSpec.numChannels = getTotalNumInputChannels();
 
     // Наші опорні робочі частоти для кожної зони
-    float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
+    /*float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
     float midFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
-    float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
+    float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };*/
 
-    double safeSampleRate = sampleRate <= 0.0 ? 44100.0 : sampleRate;
+    double safeSampleRate = sampleRate <= 0.0 ? 44100.0 : sampleRate; //zachist vid durnya
 
     for (int i = 0; i < maxPeaksPerZone; ++i)
     {
@@ -155,15 +155,19 @@ void Diesser_plusAudioProcessor::prepareToPlay(double sampleRate, int samplesPer
         highFiltersR[i]->prepare(dspSpec);
 
         // 2. Задаємо їм СТАРТОВІ коефіцієнти (прозорий режим: Gain = 1.0)
-        auto bassCoeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate, bassFreqs[i], 1.2f, 1.0f);
+        auto bassCoeffs = 
+            juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate, 
+                bassFreqs[i], 1.2f, 1.0f);
         *bassFiltersL[i]->coefficients = *bassCoeffs;
         *bassFiltersR[i]->coefficients = *bassCoeffs;
 
-        auto midCoeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate, midFreqs[i], 1.5f, 1.0f);
+        auto midCoeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate, 
+            midFreqs[i], 5.0f, 1.0f);
         *midFiltersL[i]->coefficients = *midCoeffs;
         *midFiltersR[i]->coefficients = *midCoeffs;
 
-        auto highCoeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate, highFreqs[i], 1.0f, 1.0f);
+        auto highCoeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(safeSampleRate,
+            highFreqs[i], 5.0f, 1.0f);
         *highFiltersL[i]->coefficients = *highCoeffs;
         *highFiltersR[i]->coefficients = *highCoeffs;
 
@@ -320,22 +324,26 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     double sampleRate = getSampleRate() <= 0.0 ? 44100.0 : getSampleRate();
 
     // Наші 5 фіксованих опорних частот
-    float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
+    /*float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
     float midFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
-    float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
+    float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };*/
 
     // 1. Створюємо локальні копії прямо тут, щоб вони не змінювалися під час обробки
     std::vector<ResonancePeak> currentBassPeaks;
     std::vector<ResonancePeak> currentMidPeaks;
     std::vector<ResonancePeak> currentHighPeaks;
 
-    // 2. Копіюємо дані під м'ютексом ОДИН РАЗ
+    // 2. Пробуємо взяти дані БЕЗ очікування
+    if (peakMutex.tryEnter())
     {
-        const juce::ScopedLock sl(peakMutex);
         currentBassPeaks = bassPeaks;
         currentMidPeaks = midPeaks;
         currentHighPeaks = highPeaks;
+
+        peakMutex.exit(); // Обов'язково самі відкриваємо замок!
     }
+    // Якщо tryEnter() повернув false (зайнято), ми просто пролітаємо далі.
+    // Аудіо-потік не чекає, а фільтри просто попрацюють один блок на минулих частотах.
 
     // =========================================================================
     // =========================================================================
