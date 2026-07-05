@@ -92,6 +92,8 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
 private:
+
+    const float drive = 1.12f;
     juce::Random random;
     //int bufferCounter = 0;
     float smoothedBassGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };

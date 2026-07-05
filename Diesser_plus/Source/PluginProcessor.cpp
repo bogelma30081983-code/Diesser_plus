@@ -495,10 +495,14 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             // 2. КУДІ ДОДАЄТЬСЯ КОМПЕНСАЦІЯ: множимо семпл на рівень гучності з нашої ручки
             currentSample *= makeupGainLinear;
 
-            // 3. Пропускаємо через софт-кліпер стрічки (округляємо піки після розгону гучності)
-            currentSample = std::tanh(currentSample);
+            // Розганяємо сигнал всередині тангенса, щоб він сильніше "врізався" в софт-кліпер
+            float saturated = std::tanh(currentSample * drive);
 
-            // Повертаємо звук в DAW
+            // Повертаємо загальну гучність назад, ділячи на той самий коефіцієнт,
+            // щоб звук став насиченішим за гармоніками, але не оглушив тебе
+            currentSample = saturated / drive;
+
+            // 4. Повертаємо чистий, зігрітий і насичений звук в DAW
             channelData[sample] = currentSample;
         }
     }

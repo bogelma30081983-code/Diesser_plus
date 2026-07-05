@@ -159,7 +159,7 @@ void Diesser_plusAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(14.0f);
     g.drawFittedText("Bass Suppress", 50, 150, 100, 20, juce::Justification::centred, 1);
     g.drawFittedText("Mid/High Suppress", 250, 150, 100, 20, juce::Justification::centred, 1);
-    g.drawFittedText("Gain", 150, 150, 100, 20, juce::Justification::centred, 1);
+    g.drawFittedText("Saturator", 150, 150, 100, 20, juce::Justification::centred, 1);
 }
 
 
