@@ -26,6 +26,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout Diesser_plusAudioProcessor::
         "Mid/High Suppress",
         juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f),
         0.0f));
+    //gain
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ "GAIN", 1 }, // ID параметра
+        "Make-up Gain",                       // Назва для користувача в DAW
+        0.0f,                                 // Мінімальне значення (0 дБ — без змін)
+        12.0f,                                // Максимальне значення (+12 дБ)
+        0.0f                                  // Значення за замовчуванням
+    ));
 
     return { params.begin(), params.end() };
 }
@@ -57,6 +65,7 @@ Diesser_plusAudioProcessor::Diesser_plusAudioProcessor()
     // Отримуємо вказівники на значення, щоб читати їх в processBlock максимально швидко
     bassSuppressParam = apvts.getRawParameterValue("BASS_SUPPRESS");
     midHighSuppressParam = apvts.getRawParameterValue("MID_HIGH_SUPPRESS");
+    gainParam = apvts.getRawParameterValue("GAIN");
 
     // Створюємо фільтри для обох каналів
     createFilters(bassFiltersL); createFilters(bassFiltersR);
@@ -319,6 +328,10 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
     float bassKnob = bassSuppressParam->load();
     float midHighKnob = midHighSuppressParam->load();
 
+    // Отримуємо значення в децибелах і ОДРАЗУ переводимо його в лінійний коефіцієнт для множення
+    float makeupGaindB = gainParam->load();
+    float makeupGainLinear = juce::Decibels::decibelsToGain(makeupGaindB);
+
     float maxAttenuationDb = -15.0f;
     float targetBassGainDb = (bassKnob / 100.0f) * maxAttenuationDb;
     float targetMidHighGainDb = (midHighKnob / 100.0f) * maxAttenuationDb;
@@ -467,13 +480,36 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         highFiltersL[i]->process(juce::dsp::ProcessContextReplacing<float>(audioBlock.getSingleChannelBlock(0)));
         highFiltersR[i]->process(juce::dsp::ProcessContextReplacing<float>(audioBlock.getSingleChannelBlock(1)));
     }
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    {
+        auto* channelData = buffer.getWritePointer(channel);
+
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            float currentSample = channelData[sample];
+
+            // 1. Додаємо мікро-шум (дизеринг)
+            float noise = ((random.nextFloat() * 2.0f) - 1.0f) * 0.00003f;
+            currentSample += noise;
+
+            // 2. КУДІ ДОДАЄТЬСЯ КОМПЕНСАЦІЯ: множимо семпл на рівень гучності з нашої ручки
+            currentSample *= makeupGainLinear;
+
+            // 3. Пропускаємо через софт-кліпер стрічки (округляємо піки після розгону гучності)
+            currentSample = std::tanh(currentSample);
+
+            // Повертаємо звук в DAW
+            channelData[sample] = currentSample;
+        }
+    }
+
 
     // =========================================================================
     // ВІДПРАВКА В GUI БУФЕР (Тепер відправляємо незалежно кожну зону)
     // =========================================================================
+    // Перевіряємо замок. Якщо GUI зараз читає буфер — аудіо-потік не чекає, а просто летить далі!
+    if (visualMutex.tryEnter())
     {
-        juce::ScopedLock sl(visualMutex);
-
         if (bassMaxSuppression > 0.01f)
         {
             VisualPeak vp;
@@ -492,6 +528,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             visualPeaksBuffer.push_back(vp);
         }
 
+        // Якщо у тебе нижче є такий самий блок для highMaxSuppression — залиш його ТУТ ЖЕ, всередині цих дужок if!
         if (highMaxSuppression > 0.01f)
         {
             VisualPeak vp;
@@ -500,6 +537,8 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             vp.alpha = 1.0f;
             visualPeaksBuffer.push_back(vp);
         }
+
+        visualMutex.exit(); // Обов'язково самі відчиняємо замок на виході
     }
 }
 

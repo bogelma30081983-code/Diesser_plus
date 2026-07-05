@@ -59,6 +59,8 @@ public:
     void timerCallback() override;
 
 private:
+
+    
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Diesser_plusAudioProcessor& audioProcessor;
@@ -71,11 +73,12 @@ private:
     // Слайдери
     juce::Slider bassSlider;
     juce::Slider midHighSlider;
+    juce::Slider gainSlider;
 
     // "Міст" між слайдерами та параметрами в Processor
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bassAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> midHighAttachment;
-
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
     std::vector<VisualPeak> activeVisualPeaks;
 
 

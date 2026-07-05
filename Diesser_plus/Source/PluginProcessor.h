@@ -92,6 +92,7 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
 private:
+    juce::Random random;
     //int bufferCounter = 0;
     float smoothedBassGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
     float smoothedMidGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
@@ -112,6 +113,7 @@ private:
     // Стрілочні вказівники для швидкого доступу до значень крутілок в аудіо-потоці
     std::atomic<float>* bassSuppressParam = nullptr;
     std::atomic<float>* midHighSuppressParam = nullptr;
+    std::atomic<float>* gainParam = nullptr;
 
     //juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

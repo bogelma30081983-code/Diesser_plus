@@ -16,6 +16,17 @@ Diesser_plusAudioProcessorEditor::Diesser_plusAudioProcessorEditor (Diesser_plus
     // Запускаємо таймер на 30 кадрів на секунду (приблизно кожні 33 мілісекунди)
     startTimerHz(30);
     
+    //gain
+    gainSlider.setSliderStyle(juce::Slider::LinearVertical);
+    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    gainSlider.setLookAndFeel(&customLookAndFeel); // Застосовуємо кастомний дизайн
+    addAndMakeVisible(gainSlider);
+
+    // Прив'язуємо до параметра "GAIN"
+    gainAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.apvts, "GAIN", gainSlider);
+
+
     // === Налаштування Bass Slider ===
     bassSlider.setSliderStyle(juce::Slider::LinearVertical);
     bassSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -45,6 +56,7 @@ Diesser_plusAudioProcessorEditor::~Diesser_plusAudioProcessorEditor()
     // Обов'язково відв'язуємо LookAndFeel при закритті, щоб уникнути витоків пам'яті
     bassSlider.setLookAndFeel(nullptr);
     midHighSlider.setLookAndFeel(nullptr);
+    gainSlider.setLookAndFeel(nullptr);
 }
 //
 // =================
@@ -147,6 +159,7 @@ void Diesser_plusAudioProcessorEditor::paint(juce::Graphics& g)
     g.setFont(14.0f);
     g.drawFittedText("Bass Suppress", 50, 150, 100, 20, juce::Justification::centred, 1);
     g.drawFittedText("Mid/High Suppress", 250, 150, 100, 20, juce::Justification::centred, 1);
+    g.drawFittedText("Gain", 150, 150, 100, 20, juce::Justification::centred, 1);
 }
 
 
@@ -156,4 +169,5 @@ void Diesser_plusAudioProcessorEditor::resized()
     // Розміщуємо слайдери: x, y, ширина, висота
     bassSlider.setBounds(50, 170, 100, 200);
     midHighSlider.setBounds(250, 170, 100, 200);
+    gainSlider.setBounds(150, 170, 100, 200);
 }
