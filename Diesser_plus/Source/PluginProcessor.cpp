@@ -291,12 +291,14 @@ void Diesser_plusAudioProcessor::runAnalysis(const juce::AudioBuffer<float>& buf
     std::sort(localHigh.begin(), localHigh.end(), peakSorter);
     if (localHigh.size() > 5) localHigh.erase(localHigh.begin() + 5, localHigh.end());
 
-    // Записуємо відфільтровані топ-5 піків у глобальні змінні під захистом м'ютекса
+    // Спробуємо записати дані. Якщо м'ютекс зайнятий аудіо-потоком — аналізатор просто йде далі!
+    if (peakMutex.tryEnter())
     {
-        const juce::ScopedLock sl(peakMutex);
         bassPeaks = localBass;
         midPeaks = localMid;
         highPeaks = localHigh;
+
+        peakMutex.exit(); // Обов'язково самі відпускаємо замок
     }
 }
 
