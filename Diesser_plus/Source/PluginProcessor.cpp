@@ -338,10 +338,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
 
     double sampleRate = getSampleRate() <= 0.0 ? 44100.0 : getSampleRate();
 
-    // Наші 5 фіксованих опорних частот
-    /*float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
-    float midFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
-    float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };*/
+    
 
     // 1. Створюємо локальні копії прямо тут, щоб вони не змінювалися під час обробки
     std::vector<ResonancePeak> currentBassPeaks;
@@ -456,7 +453,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         // 1. Якщо ПІК Є
         if (midHighKnob > 0.1f && i < currentMidPeaks.size())
         {
-            float midWeight = juce::jlimit(0.0f, 1.0f, currentMidPeaks[i].magnitude * 15.0f);
+            float midWeight = juce::jlimit(0.0f, 1.0f, currentMidPeaks[i].magnitude * 25.0f);
             targetMidGain = juce::Decibels::decibelsToGain(targetMidHighGainDb * midWeight);
 
             targetMidFreq = currentMidPeaks[i].frequency; // Ціль — нова брудна частота!
@@ -473,13 +470,13 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         if (i < currentMidPeaks.size() && midHighKnob > 0.1f)
         {
             // Фаза Атаки (Швидко йдемо до цілі, поки вокаліст свистить)
-            smoothedMidGains[i] += (targetMidGain - smoothedMidGains[i]) * 0.08f;
-            smoothedMidFreqs[i] += (targetMidFreq - smoothedMidFreqs[i]) * 0.02f; // Використовуємо тут target!
+            smoothedMidGains[i] += (targetMidGain - smoothedMidGains[i]) * 0.25f;
+            smoothedMidFreqs[i] += (targetMidFreq - smoothedMidFreqs[i]) * 0.05f; // Використовуємо тут target!
         }
         else
         {
             // Фаза Релізу (М'яко повертаємо гейн в 1.0f, а частоту не смикаємо)
-            smoothedMidGains[i] += (1.0f - smoothedMidGains[i]) * 0.005f;
+            smoothedMidGains[i] += (1.0f - smoothedMidGains[i]) * 0.05f;
             // smoothedMidFreqs += 0 (бо targetMidFreq == smoothedMidFreqs) — замерзає
         }
 
@@ -515,7 +512,7 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         // 1. Якщо ПІК Є
         if (midHighKnob > 0.1f && i < currentHighPeaks.size())
         {
-            float highWeight = juce::jlimit(0.0f, 1.0f, currentHighPeaks[i].magnitude * 15.0f);
+            float highWeight = juce::jlimit(0.0f, 1.0f, currentHighPeaks[i].magnitude * 35.0f);
             targetHighGain = juce::Decibels::decibelsToGain(targetMidHighGainDb * highWeight);
 
             targetHighFreq = currentHighPeaks[i].frequency; // Ціль — нова брудна частота!
@@ -532,21 +529,21 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         if (i < currentHighPeaks.size() && midHighKnob > 0.1f)
         {
             // Фаза Атаки (Швидко йдемо до цілі, поки вокаліст свистить)
-            smoothedHighGains[i] += (targetHighGain - smoothedHighGains[i]) * 0.08f;
-            smoothedHighFreqs[i] += (targetHighFreq - smoothedHighFreqs[i]) * 0.02f; // Використовуємо тут target!
+            smoothedHighGains[i] += (targetHighGain - smoothedHighGains[i]) * 0.25f;
+            smoothedHighFreqs[i] += (targetHighFreq - smoothedHighFreqs[i]) * 0.05f; // Використовуємо тут target!
         }
         else
         {
             // Фаза Релізу (М'яко повертаємо гейн в 1.0f, а частоту не смикаємо)
-            smoothedHighGains[i] += (1.0f - smoothedHighGains[i]) * 0.005f;
+            smoothedHighGains[i] += (1.0f - smoothedHighGains[i]) * 0.05f;
             // smoothedMidFreqs += 0 (бо targetMidFreq == smoothedMidFreqs) — замерзає
         }
 
         // 3. Оновлюємо фільтр
-        auto midCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate,
-            smoothedMidFreqs[i], 1.0f, smoothedMidGains[i]);
-        *midFiltersL[i]->coefficients = *midCoefficients;
-        *midFiltersR[i]->coefficients = *midCoefficients;
+        auto highCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate,
+            smoothedHighFreqs[i], 1.0f, smoothedHighGains[i]);
+        *highFiltersL[i]->coefficients = *highCoefficients;
+        *highFiltersR[i]->coefficients = *highCoefficients;
 
         // 4. ТВОЙ БЛОК ДЛЯ ГРАФІКА (ТЕПЕР ВІН ПРАЦЮЄ НА ЗГЛАДЖЕНИХ ДАНИХ!)
         if (smoothedHighGains[i] < 0.99f)

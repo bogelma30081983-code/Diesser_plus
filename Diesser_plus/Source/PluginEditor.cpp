@@ -49,6 +49,7 @@ Diesser_plusAudioProcessorEditor::Diesser_plusAudioProcessorEditor (Diesser_plus
 
     // Задаємо базовий розмір вікна плагіна
     setSize(400, 400);
+
 }
 
 Diesser_plusAudioProcessorEditor::~Diesser_plusAudioProcessorEditor()
