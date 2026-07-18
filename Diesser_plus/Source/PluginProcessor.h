@@ -76,7 +76,7 @@ public:
     // Створимо публічні методи, щоб GUI міг забирати координати точок для малювання
     std::vector<ResonancePeak> getBassPeaks() { const juce::ScopedLock sl(peakMutex); return bassPeaks; }
     std::vector<ResonancePeak> getMidPeaks() { const juce::ScopedLock sl(peakMutex); return midPeaks; }
-    std::vector<ResonancePeak> getHighPeaks() { const juce::ScopedLock sl(peakMutex); return highPeaks; }
+    //std::vector<ResonancePeak> getHighPeaks() { const juce::ScopedLock sl(peakMutex); return highPeaks; }
     //====
     // === ТУТ ТИ ЗАБУВ ОГОЛОСИТИ ЗМІННІ ДЛЯ ХВИЛЬОВОГО GUI! ДОДАЙ СЮДЫ: ===
     juce::CriticalSection visualMutex;
@@ -98,15 +98,15 @@ private:
 
     const float maxAttenuationDb = -15.0f;
     const float drive = 1.12f;
-    juce::Random random;
+    //juce::Random random;
     //int bufferCounter = 0;
     float smoothedBassGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
     float smoothedMidGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-    float smoothedHighGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    //float smoothedHighGains[5] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
 
     float smoothedBassFreqs[5] = { 60.0f, 80.0f, 100.0f, 150.0f, 200.0f };
     float smoothedMidFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
-    float smoothedHighFreqs[5] = { 5000.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
+    //float smoothedHighFreqs[5] = { 5000.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
 
 
     //int bufferCounter = 0; // Лічильник пропущених буферів
@@ -141,7 +141,7 @@ private:
     // Списки для збереження знайдених проблем (до 5 на кожну зону)
     std::vector<ResonancePeak> bassPeaks;
     std::vector<ResonancePeak> midPeaks;
-    std::vector<ResonancePeak> highPeaks;
+    //std::vector<ResonancePeak> highPeaks;
 
     // Спеціальний м'ютекс для безпечної передачі точок між аудіо-потоком і GUI
     juce::CriticalSection peakMutex;
@@ -151,11 +151,11 @@ private:
     
 
     // Кількість фільтрів на зону
-    static constexpr int maxPeaksPerZone = 5;
+    static constexpr int maxPeaksPerZone = 1;
     // Наші опорні робочі частоти для кожної зони
-    const float bassFreqs[5] = { 60.0f, 80.0f, 100.0f, 120.0f, 150.0f };
-    const float midFreqs[5] = { 1200.0f, 1800.0f, 2500.0f, 3200.0f, 4000.0f };
-    const float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
+    const float bassFreqs[maxPeaksPerZone] = { 100.0f};
+    const float midFreqs[maxPeaksPerZone] = { 1500.0f };
+    //const float highFreqs[5] = { 5500.0f, 7000.0f, 8500.0f, 10000.0f, 12000.0f };
 
     // Специфікація процесора для ініціалізації DSP
     juce::dsp::ProcessSpec dspSpec;
@@ -164,7 +164,7 @@ private:
     // Використовуємо IIR::Filter<float>
     std::vector<std::unique_ptr<juce::dsp::IIR::Filter<float>>> bassFiltersL, bassFiltersR;
     std::vector<std::unique_ptr<juce::dsp::IIR::Filter<float>>> midFiltersL, midFiltersR;
-    std::vector<std::unique_ptr<juce::dsp::IIR::Filter<float>>> highFiltersL, highFiltersR;
+    //std::vector<std::unique_ptr<juce::dsp::IIR::Filter<float>>> highFiltersL, highFiltersR;
 
     // Допоміжна функція для створення масиву фільтрів
     //void createFilters(std::vector<std::unique_ptr<juce::dsp::IIR::Filter<float>>>& filters);
