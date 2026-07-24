@@ -34,6 +34,32 @@ public:
         g.setColour(juce::Colours::black);
         g.fillRect(x + width / 2 - 10, static_cast<int>(sliderPos) - 1, 20, 2);
     }
+    // === ДОДАЄМО МАЛЮВАННЯ КНОПКИ В ТОМУ Ж СТИЛІ ===
+    void drawToggleButton(juce::Graphics& g, juce::ToggleButton& button,
+        bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        auto bounds = button.getLocalBounds().toFloat();
+        bool isToggled = button.getToggleState();
+
+        // Беремо помаранчевий колір (як у слайдера!), коли кнопка увімкнена
+        juce::Colour bgColour = isToggled ? juce::Colours::orange : juce::Colours::darkgrey.darker();
+
+        if (shouldDrawButtonAsHighlighted)
+            bgColour = bgColour.brighter(0.2f);
+
+        // Малюємо планку кнопки
+        g.setColour(bgColour);
+        g.fillRoundedRectangle(bounds.reduced(2.0f), 4.0f);
+
+        // Контур кнопки
+        g.setColour(isToggled ? juce::Colours::white : juce::Colours::grey);
+        g.drawRoundedRectangle(bounds.reduced(2.0f), 4.0f, 1.0f);
+
+        // Текст всередині кнопки
+        g.setColour(isToggled ? juce::Colours::black : juce::Colours::white);
+        g.setFont(juce::FontOptions(13.0f, juce::Font::bold));
+        g.drawText(button.getButtonText(), bounds, juce::Justification::centred);
+    }
 };
 
 // =================================================
@@ -59,7 +85,12 @@ public:
     void timerCallback() override;
 
 private:
+    // 1. Оголошуємо графічний елемент кнопки
+    juce::ToggleButton noiseButton{ "Dither Noise" };
 
+    // 2. Оголошуємо прив'язку (Attachment) між кнопкою та APVTS
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> 
+        noiseButtonAttachment;
     
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

@@ -35,6 +35,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout Diesser_plusAudioProcessor::
         0.0f                                  // Значення за замовчуванням
     ));
 
+    // Додаємо булевий параметр (кнопку-тумблер)
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ "NOISE_ENABLE", 1 }, // ID параметра
+        "Dither Noise",                           // Назва в DAW
+        false                                     // Початковий стан (за замовчуванням вимкнено)
+    ));
+
+
     return { params.begin(), params.end() };
 }
 
@@ -625,6 +633,8 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
         //highFiltersL[i]->process(juce::dsp::ProcessContextReplacing<float>(audioBlock.getSingleChannelBlock(0)));
         //highFiltersR[i]->process(juce::dsp::ProcessContextReplacing<float>(audioBlock.getSingleChannelBlock(1)));
     }
+    isNoiseEnabled = *apvts.getRawParameterValue("NOISE_ENABLE") > 0.5f;
+
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer(channel);
@@ -636,6 +646,12 @@ void Diesser_plusAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, 
             // 1. Додаємо мікро-шум (дизеринг)
             /*float noise = ((random.nextFloat() * 2.0f) - 1.0f) * 0.00003f;
             currentSample += noise;*/
+            // 1. Додаємо мікро-шум (дизеринг) за умовою
+            if (isNoiseEnabled)
+            {
+                float noise = ((random.nextFloat() * 2.0f) - 1.0f) * 0.00003f;
+                currentSample += noise;
+            }
 
             // 2. КУДІ ДОДАЄТЬСЯ КОМПЕНСАЦІЯ: множимо семпл на рівень гучності з нашої ручки
             currentSample *= makeupGainLinear;

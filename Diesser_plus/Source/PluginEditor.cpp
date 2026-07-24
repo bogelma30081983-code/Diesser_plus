@@ -47,8 +47,23 @@ Diesser_plusAudioProcessorEditor::Diesser_plusAudioProcessorEditor (Diesser_plus
     midHighAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.apvts, "MID_HIGH_SUPPRESS", midHighSlider);
 
+
+    //noiseButton.setLookAndFeel(&customLookAndFeel); // Застосовуємо кастомний дизайн
+    // Робимо кнопку видимою на екрані
+    noiseButton.setLookAndFeel(&customLookAndFeel);
+    addAndMakeVisible(noiseButton);
+    
+    // Прив'язуємо кнопку до параметра "NOISE_ENABLE" у вашому APVTS
+    // (Переконайся, що дерево apvts у PluginProcessor.h знаходиться в секції public)
+    noiseButtonAttachment = 
+        std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.apvts,
+        "NOISE_ENABLE",
+        noiseButton
+    );
+
     // Задаємо базовий розмір вікна плагіна
-    setSize(400, 400);
+    setSize(400, 440);
 
 }
 
@@ -58,6 +73,7 @@ Diesser_plusAudioProcessorEditor::~Diesser_plusAudioProcessorEditor()
     bassSlider.setLookAndFeel(nullptr);
     midHighSlider.setLookAndFeel(nullptr);
     gainSlider.setLookAndFeel(nullptr);
+    noiseButton.setLookAndFeel(nullptr);
 }
 //
 // =================
@@ -171,4 +187,6 @@ void Diesser_plusAudioProcessorEditor::resized()
     bassSlider.setBounds(50, 170, 100, 200);
     midHighSlider.setBounds(250, 170, 100, 200);
     gainSlider.setBounds(150, 170, 100, 200);
+    // Вкажіть зручні координати для розміщення кнопки на вашій панелі
+    noiseButton.setBounds(20, 400, 80, 20);
 }
